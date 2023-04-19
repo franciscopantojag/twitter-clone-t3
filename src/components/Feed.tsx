@@ -5,7 +5,7 @@ import PostView from './PostView';
 const Feed = () => {
   const { data, isLoading } = api.post.getAll.useQuery();
   if (isLoading) return <LoadingPage />;
-  console.log(isLoading);
+
   return (
     <div className="flex flex-col">
       {data?.map((post) => (

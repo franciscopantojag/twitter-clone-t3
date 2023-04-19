@@ -8,20 +8,26 @@ import { createServerSideHelpers } from '@trpc/react-query/server';
 import { appRouter } from '~/server/api/root';
 import superjson from 'superjson';
 import { prisma } from '../server/db';
+import { getAuth, clerkClient, buildClerkProps } from '@clerk/nextjs/server';
 
-export const getServerSideProps: GetServerSideProps = async ({
-  req: { url },
-}) => {
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const isClientSideNavigation = !!req.url?.includes('_next/data');
+  if (isClientSideNavigation) return { props: {} };
+  const { userId } = getAuth(req);
+
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: { prisma },
     transformer: superjson,
   });
-  const isClientSideNavigation = !!url?.includes('_next/data');
-  if (!isClientSideNavigation) await ssg.post.getAll.prefetch();
+  const [user] = await Promise.all([
+    userId ? clerkClient.users.getUser(userId) : undefined,
+    ssg.post.getAll.prefetch(),
+  ]);
 
   return {
     props: {
+      ...buildClerkProps(req, { user }),
       trpcState: ssg.dehydrate(),
     },
   };
@@ -30,7 +36,6 @@ export const getServerSideProps: GetServerSideProps = async ({
 const Home: NextPage = () => {
   const { isSignedIn, isLoaded: isUserLoaded } = useUser();
   api.post.getAll.useQuery();
-  if (!isUserLoaded) return null;
 
   return (
     <>
@@ -41,14 +46,17 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="flex h-full w-full flex-col border-x border-slate-400 md:max-w-2xl">
-          <div className="flex border-y border-slate-400 p-4">
-            {isSignedIn && <CreatePostWizard />}
-            {!isSignedIn && (
-              <div className="flex justify-center">
-                <SignInButton />
-              </div>
-            )}
-          </div>
+          {isUserLoaded && (
+            <div className="flex border-y border-slate-400 p-4">
+              {isSignedIn && <CreatePostWizard />}
+              {!isSignedIn && (
+                <div className="flex justify-center">
+                  <SignInButton />
+                </div>
+              )}
+            </div>
+          )}
+
           <Feed />
         </div>
       </main>

@@ -20,7 +20,7 @@ type PostWithAuthor = Post & {
   author: PublicUser;
 };
 
-const sleep = (n: number) => new Promise((res) => setTimeout(res, n));
+// const sleep = (n: number) => new Promise((res) => setTimeout(res, n));
 
 const buildPosts = (posts: Post[], users: User[]) => {
   const usersById = users.reduce(
@@ -56,7 +56,7 @@ export const postRouter = createTRPCRouter({
       },
       take: MAX_POSTS,
     });
-    console.log('**********');
+
     const users = await clerkClient.users.getUserList({
       userId: posts.map(({ authorId }) => authorId),
       limit: MAX_POSTS,
