@@ -14,19 +14,20 @@ const PostView: React.FC<Props> = ({
   post: { id, content, author, createdAt },
 }) => {
   const fromNow = dayjs(createdAt).fromNow();
+  const textId = `@${author.username}`;
   return (
     <div key={id} className="flex gap-3 border-b border-slate-400 p-4">
-      <Link href={'/test'}>
+      <Link href={`/${author.username}`}>
         <img
           src={author.profileImageUrl}
-          alt={`Profile Image of ${author.textId}`}
+          alt={`Profile Image of ${author.username}`}
           className="h-14 w-14 rounded-full"
         />
       </Link>
 
       <div className="flex flex-col gap-1">
         <div className="flex gap-1">
-          <span className="font-semibold">{author.textId}</span>
+          <span className="font-semibold">{textId}</span>
           <span>·</span>
           <span className="font-thin">{fromNow}</span>
         </div>

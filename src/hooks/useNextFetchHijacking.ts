@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export const useNextFetchHijacking = () => {
+const useNextFetchHijacking = () => {
   useEffect(() => {
     const { fetch: originalFetch } = window;
     window.fetch = async (...args) => {
@@ -28,3 +28,5 @@ export const useNextFetchHijacking = () => {
     };
   }, []);
 };
+
+export default useNextFetchHijacking;

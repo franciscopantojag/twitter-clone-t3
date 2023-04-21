@@ -10,6 +10,7 @@ import z from 'zod';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { TRPCError } from '@trpc/server';
+import { emojiValidator } from '~/utils/post';
 
 // Create a new ratelimiter, that allows 1 requests per 10 seconds
 const ratelimit = new Ratelimit({
@@ -28,10 +29,8 @@ const MAX_POSTS = 100;
 
 interface PublicUser {
   id: string;
-  username: string | null;
-  email?: string;
+  username: string;
   profileImageUrl: string;
-  textId: string;
 }
 interface UsersById {
   [key: string]: PublicUser;
@@ -42,22 +41,10 @@ type PostWithAuthor = Post & {
 };
 
 const buildPosts = (posts: Post[], users: User[]) => {
-  const usersById = users.reduce(
-    (acc, { id, username, profileImageUrl, emailAddresses }) => {
-      const email = emailAddresses[0]?.emailAddress;
-      const textId = username ? `@${username}` : email;
-      if (!textId) return acc;
-      const usrObj: PublicUser = {
-        id,
-        username,
-        profileImageUrl,
-        email,
-        textId,
-      };
-      return { ...acc, [id]: usrObj };
-    },
-    {} as UsersById
-  );
+  const usersById = users.reduce((acc, { id, username, profileImageUrl }) => {
+    if (!username) return acc;
+    return { ...acc, [id]: { id, username: username, profileImageUrl } };
+  }, {} as UsersById);
 
   return posts.reduce((acc, post) => {
     const author = usersById[post.authorId];
@@ -92,7 +79,7 @@ export const postRouter = createTRPCRouter({
   create: privateProcedure
     .input(
       z.object({
-        content: z.string().emoji().min(1).max(280),
+        content: emojiValidator,
       })
     )
     .mutation(async ({ ctx, input }) => {

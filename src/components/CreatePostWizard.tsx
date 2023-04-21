@@ -1,25 +1,21 @@
 import { useUser } from '@clerk/nextjs';
-import { useCallback, useRef } from 'react';
-import type { MouseEventHandler } from 'react';
-import { api } from '~/utils/api';
+import { LoadingSpinner } from './Loading';
+import useCreatePost from '~/hooks/useCreatePost';
+import { useCallback } from 'react';
+import type { KeyboardEventHandler } from 'react';
 
 const CreatePostWizard = () => {
-  const ctx = api.useContext();
   const { user } = useUser();
-  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
-    onSuccess: () => {
-      if (inputRef.current?.value) inputRef.current.value = '';
-      void ctx.post.getAll.invalidate();
+  const { isPosting, inputRef, onContentChange, isPostingEnabled, onSubmit } =
+    useCreatePost();
+  const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
+    (e) => {
+      if (!(e.key === 'Enter')) return;
+      e.preventDefault();
+      onSubmit();
     },
-  });
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const onSubmit = useCallback<MouseEventHandler<HTMLButtonElement>>(() => {
-    if (!inputRef.current?.value) return;
-    mutate({ content: inputRef.current.value });
-  }, [mutate]);
-
+    [onSubmit]
+  );
   if (!user) return null;
 
   return (
@@ -34,8 +30,19 @@ const CreatePostWizard = () => {
         placeholder="Type some emojis!"
         className="grow bg-transparent outline-none"
         disabled={isPosting}
+        onChange={onContentChange}
+        onKeyDown={onKeyDown}
       />
-      <button onClick={onSubmit}>Post</button>
+      {isPostingEnabled && (
+        <button disabled={isPosting} onClick={onSubmit}>
+          Post
+        </button>
+      )}
+      {isPosting && (
+        <div className="flex items-center justify-center">
+          <LoadingSpinner size={20} />
+        </div>
+      )}
     </div>
   );
 };
