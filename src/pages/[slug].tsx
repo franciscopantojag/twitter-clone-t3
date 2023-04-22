@@ -52,11 +52,9 @@ const ProfileFeed = ({ author }: { author: PublicUser }) => {
 };
 
 const ProfilePage = ({ username }: { username: string }) => {
-  const { data, isLoading } = api.profile.getUserByUsername.useQuery({
+  const { data } = api.profile.getUserByUsername.useQuery({
     username,
   });
-
-  if (isLoading) return <div>Loading...</div>;
 
   if (!data) return <div>404</div>;
   const textId = `@${data.username}`;
@@ -64,7 +62,7 @@ const ProfilePage = ({ username }: { username: string }) => {
   return (
     <>
       <Head>
-        <title>{`Profile - @${data.username}`}</title>
+        <title>{`@${data.username}`}</title>
       </Head>
       <main className="flex min-h-screen justify-center">
         <div className="flex min-h-full w-full flex-col border-x border-slate-400 md:max-w-2xl">

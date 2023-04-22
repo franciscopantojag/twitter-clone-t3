@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import { LoadingSpinner } from './Loading';
 import useCreatePost from '~/hooks/useCreatePost';
 import { useCallback } from 'react';
@@ -20,10 +20,15 @@ const CreatePostWizard = () => {
 
   return (
     <div className="flex w-full gap-3">
-      <img
-        alt="Profile Picture"
-        src={user.profileImageUrl}
-        className="h-14 w-14 rounded-full"
+      <UserButton
+        appearance={{
+          elements: {
+            userButtonAvatarBox: {
+              width: 56,
+              height: 56,
+            },
+          },
+        }}
       />
       <input
         ref={inputRef}

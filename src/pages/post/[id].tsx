@@ -1,5 +1,6 @@
 import { createServerSideHelpers } from '@trpc/react-query/server';
 import type { GetStaticProps } from 'next';
+import Head from 'next/head';
 import superjson from 'superjson';
 import PostView from '~/components/PostView';
 import { appRouter } from '~/server/api/root';
@@ -31,18 +32,22 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
   };
 };
 const SinglePostView = ({ postId }: { postId: string }) => {
-  const { data: post, isLoading } = api.post.getById.useQuery({ postId });
-  if (isLoading) return <div>Loading...</div>;
+  const { data: post } = api.post.getById.useQuery({ postId });
   if (!post) return <div>Error...</div>;
 
   return (
-    <main className="flex min-h-screen justify-center">
-      <div className="flex min-h-full w-full flex-col border-x border-slate-400 md:max-w-2xl">
-        <div className="flex flex-col">
-          <PostView key={post.id} post={post} />
+    <>
+      <Head>
+        <title>{`${post.content} - @${post.author.username}`}</title>
+      </Head>
+      <main className="flex min-h-screen justify-center">
+        <div className="flex min-h-full w-full flex-col border-x border-slate-400 md:max-w-2xl">
+          <div className="flex flex-col">
+            <PostView key={post.id} post={post} />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 };
 
