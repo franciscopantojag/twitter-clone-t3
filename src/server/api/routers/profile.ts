@@ -23,6 +23,7 @@ export const profileRouter = createTRPCRouter({
         });
       }
       const { id, username, profileImageUrl } = user;
-      return { username, id, profileImageUrl };
+
+      return { id, username, profileImageUrl };
     }),
 });

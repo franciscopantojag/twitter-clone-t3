@@ -96,4 +96,45 @@ export const postRouter = createTRPCRouter({
       });
       return post;
     }),
+  getById: publicProcedure
+    .input(
+      z.object({
+        postId: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const postId = input.postId;
+      const post = await ctx.prisma.post.findUnique({
+        where: {
+          id: postId,
+        },
+      });
+      if (!post) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+      const { id, profileImageUrl, username } = await clerkClient.users.getUser(
+        post.authorId
+      );
+      if (!username) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+
+      return { ...post, author: { id, profileImageUrl, username } };
+    }),
+  getByAuthorId: publicProcedure
+    .input(
+      z.object({
+        authorId: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const authorId = input.authorId;
+      const posts = await ctx.prisma.post.findMany({
+        where: {
+          authorId,
+        },
+      });
+
+      return posts;
+    }),
 });

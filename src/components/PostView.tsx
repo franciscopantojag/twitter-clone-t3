@@ -25,11 +25,16 @@ const PostView: React.FC<Props> = ({
         />
       </Link>
 
-      <div className="flex flex-col gap-1">
-        <div className="flex gap-1">
-          <span className="font-semibold">{textId}</span>
+      <div className="flex flex-col gap-[2px]">
+        <div className="flex gap-1 text-slate-300">
+          <Link href={`/${author.username}`}>
+            <span>{textId}</span>
+          </Link>
+
           <span>·</span>
-          <span className="font-thin">{fromNow}</span>
+          <Link href={`/post/${id}`}>
+            <span className="font-thin">{fromNow}</span>
+          </Link>
         </div>
         <span className="text-2xl">{content}</span>
       </div>
