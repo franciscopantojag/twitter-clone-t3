@@ -7,6 +7,8 @@ import PostView from '~/components/PostView';
 import { appRouter } from '~/server/api/root';
 import { api } from '~/utils/api';
 import { prisma } from '../../server/db';
+import { useRouter } from 'next/router';
+import { useCallback } from 'react';
 
 export const getStaticPaths = () => {
   return {
@@ -34,8 +36,9 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
 };
 const SinglePostView = ({ postId }: { postId: string }) => {
   const { data: post } = api.post.getById.useQuery({ postId });
+  const router = useRouter();
+  const goHome = useCallback(() => router.push('/'), [router]);
   if (!post) return <div>Error...</div>;
-
   return (
     <Layout>
       <Head>
@@ -43,7 +46,7 @@ const SinglePostView = ({ postId }: { postId: string }) => {
       </Head>
       {post.isActive ? (
         <div className="flex flex-col">
-          <PostView key={post.id} post={post} />
+          <PostView goHome={goHome} key={post.id} post={post} />
         </div>
       ) : (
         <div className="p-2 text-center">This post no longer exists</div>

@@ -13,10 +13,12 @@ dayjs.extend(relativeTime);
 type PostWithUser = RouterOutputs['post']['getAll'][number];
 interface Props {
   post: PostWithUser;
+  goHome?: () => Promise<boolean>;
 }
 
 const PostView: React.FC<Props> = ({
   post: { id, content, author, createdAt },
+  goHome,
 }) => {
   const fromNow = buildRelative(createdAt);
   const textId = `@${author.username}`;
@@ -35,7 +37,9 @@ const PostView: React.FC<Props> = ({
           ctx.post.getByAuthorId.invalidate(),
           ctx.post.getById.invalidate(),
         ]);
-        setIsPostOpaque(false);
+        if (goHome) {
+          setTimeout(() => void goHome(), 500);
+        }
       } catch (error) {
         toast.error('Something went wrong. Please refresh the page');
         setIsPostOpaque(false);

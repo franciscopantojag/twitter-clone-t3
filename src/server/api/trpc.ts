@@ -24,13 +24,22 @@ import { prisma } from '~/server/db';
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (opts: CreateNextContextOptions) => {
-  const { req } = opts;
+interface Ctx {
+  prisma: PrismaClient<
+    Prisma.PrismaClientOptions,
+    never,
+    Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
+  >;
+  userId: string | null;
+  res?: NextApiResponse;
+}
+export const createTRPCContext = (opts: CreateNextContextOptions): Ctx => {
+  const { req, res } = opts;
   const sesh = getAuth(req);
 
   const { userId } = sesh;
 
-  return { prisma, userId };
+  return { prisma, userId, res };
 };
 
 /**
@@ -44,6 +53,8 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { getAuth } from '@clerk/nextjs/server';
+import type { Prisma, PrismaClient } from '@prisma/client';
+import type { NextApiResponse } from 'next';
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,

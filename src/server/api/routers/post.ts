@@ -111,9 +111,18 @@ export const postRouter = createTRPCRouter({
 
       const isAuthor = userId === post.authorId;
       if (!isAuthor) throw new TRPCError({ code: 'UNAUTHORIZED' });
-      return ctx.prisma.post.update({
+
+      const updatedPost = await ctx.prisma.post.update({
         data: { isActive: false },
         where: { id: postId },
       });
+      if (ctx?.res) {
+        try {
+          await ctx.res.revalidate(`/post/${post.id}`);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      return updatedPost;
     }),
 });
