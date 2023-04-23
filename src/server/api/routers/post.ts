@@ -106,23 +106,24 @@ export const postRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input: { postId } }) => {
       const { userId } = ctx;
-      const post = await ctx.prisma.post.findUnique({ where: { id: postId } });
-      if (!post) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      const isAuthor = userId === post.authorId;
-      if (!isAuthor) throw new TRPCError({ code: 'UNAUTHORIZED' });
-
-      const updatedPost = await ctx.prisma.post.update({
-        data: { isActive: false },
-        where: { id: postId },
+      const { count } = await ctx.prisma.post.updateMany({
+        where: {
+          authorId: userId,
+          id: postId,
+        },
+        data: {
+          isActive: false,
+        },
       });
+
+      if (!count) throw new TRPCError({ code: 'NOT_FOUND' });
+
       if (ctx?.res) {
-        try {
-          await ctx.res.revalidate(`/post/${post.id}`);
-        } catch (error) {
-          console.error(error);
-        }
+        ctx.res
+          .revalidate(`/post/${postId}`)
+          .catch((err) => console.error(err));
       }
-      return updatedPost;
+      return count;
     }),
 });
