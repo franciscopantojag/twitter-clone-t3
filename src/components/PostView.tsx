@@ -30,7 +30,11 @@ const PostView: React.FC<Props> = ({
   const { mutate } = api.post.deleteById.useMutation({
     onSuccess: async () => {
       try {
-        await ctx.post.getAll.invalidate();
+        await Promise.all([
+          ctx.post.getAll.invalidate(),
+          ctx.post.getByAuthorId.invalidate(),
+          ctx.post.getById.invalidate(),
+        ]);
         setIsPostOpaque(false);
       } catch (error) {
         toast.error('Something went wrong. Please refresh the page');
