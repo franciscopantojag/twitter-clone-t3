@@ -1,6 +1,4 @@
-import { type User } from '@clerk/nextjs/dist/api';
 import { clerkClient } from '@clerk/nextjs/server';
-import { type Post } from '@prisma/client';
 import {
   createTRPCRouter,
   privateProcedure,
@@ -10,7 +8,8 @@ import z from 'zod';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { TRPCError } from '@trpc/server';
-import { emojiValidator } from '~/utils/post';
+import { buildPosts, emojiValidator } from '~/utils/post';
+import { buildPublicProfile } from '~/utils/profile';
 
 // Create a new ratelimiter, that allows 1 requests per 10 seconds
 const ratelimit = new Ratelimit({
@@ -27,44 +26,11 @@ const ratelimit = new Ratelimit({
 
 const MAX_POSTS = 100;
 
-interface PublicUser {
-  id: string;
-  username: string;
-  profileImageUrl: string;
-}
-interface UsersById {
-  [key: string]: PublicUser;
-}
-
-type PostWithAuthor = Post & {
-  author: PublicUser;
-};
-
-const buildPosts = (posts: Post[], users: User[]) => {
-  const usersById = users.reduce((acc, { id, username, profileImageUrl }) => {
-    if (!username) return acc;
-    return { ...acc, [id]: { id, username: username, profileImageUrl } };
-  }, {} as UsersById);
-
-  return posts.reduce((acc, post) => {
-    const author = usersById[post.authorId];
-    return !author ? acc : [...acc, { ...post, author }];
-  }, [] as PostWithAuthor[]);
-};
-
 export const postRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.prisma.post.findMany({
-      where: {
-        authorId: {
-          not: '',
-        },
-      },
-      orderBy: [
-        {
-          createdAt: 'desc',
-        },
-      ],
+      where: { authorId: { not: '' } },
+      orderBy: [{ createdAt: 'desc' }],
       take: MAX_POSTS,
     });
 
@@ -82,8 +48,8 @@ export const postRouter = createTRPCRouter({
         content: emojiValidator,
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      const authorId = ctx.userId;
+    .mutation(async ({ ctx, input: { content } }) => {
+      const { userId: authorId } = ctx;
 
       const { success } = await ratelimit.limit(authorId);
       if (!success) throw new TRPCError({ code: 'TOO_MANY_REQUESTS' });
@@ -91,7 +57,7 @@ export const postRouter = createTRPCRouter({
       const post = await ctx.prisma.post.create({
         data: {
           authorId,
-          content: input.content,
+          content,
         },
       });
       return post;
@@ -104,22 +70,19 @@ export const postRouter = createTRPCRouter({
     )
     .query(async ({ input, ctx }) => {
       const postId = input.postId;
-      const post = await ctx.prisma.post.findUnique({
-        where: {
-          id: postId,
-        },
-      });
+      const post = await ctx.prisma.post.findUnique({ where: { id: postId } });
       if (!post) {
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
-      const { id, profileImageUrl, username } = await clerkClient.users.getUser(
-        post.authorId
-      );
-      if (!username) {
+      const [user] = await clerkClient.users.getUserList({
+        userId: [post.authorId],
+      });
+      const author = buildPublicProfile(user);
+      if (!author) {
         throw new TRPCError({ code: 'NOT_FOUND' });
       }
 
-      return { ...post, author: { id, profileImageUrl, username } };
+      return { ...post, author };
     }),
   getByAuthorId: publicProcedure
     .input(
@@ -130,11 +93,24 @@ export const postRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const authorId = input.authorId;
       const posts = await ctx.prisma.post.findMany({
-        where: {
-          authorId,
-        },
+        where: { authorId },
+        orderBy: [{ createdAt: 'desc' }],
       });
-
       return posts;
+    }),
+  deleteById: privateProcedure
+    .input(
+      z.object({
+        postId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input: { postId } }) => {
+      const { userId } = ctx;
+      const post = await ctx.prisma.post.findUnique({ where: { id: postId } });
+      if (!post) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      const isAuthor = userId === post.authorId;
+      if (!isAuthor) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      return ctx.prisma.post.delete({ where: { id: postId } });
     }),
 });

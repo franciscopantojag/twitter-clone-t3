@@ -8,6 +8,7 @@ const CreatePostWizard = () => {
   const { user } = useUser();
   const { isPosting, inputRef, onContentChange, isPostingEnabled, onSubmit } =
     useCreatePost();
+
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (e) => {
       if (!(e.key === 'Enter')) return;

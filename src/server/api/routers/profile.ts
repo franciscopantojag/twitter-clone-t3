@@ -4,6 +4,7 @@ import { createTRPCRouter, publicProcedure } from '~/server/api/trpc';
 import z from 'zod';
 
 import { TRPCError } from '@trpc/server';
+import { buildPublicProfile } from '~/utils/profile';
 
 export const profileRouter = createTRPCRouter({
   getUserByUsername: publicProcedure
@@ -16,14 +17,14 @@ export const profileRouter = createTRPCRouter({
       const [user] = await clerkClient.users.getUserList({
         username: [input.username],
       });
-      if (!user?.username) {
+      const publicUser = buildPublicProfile(user);
+      if (!publicUser) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found',
         });
       }
-      const { id, username, profileImageUrl } = user;
 
-      return { id, username, profileImageUrl };
+      return publicUser;
     }),
 });

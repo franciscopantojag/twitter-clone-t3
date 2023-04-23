@@ -2,6 +2,7 @@ import { createServerSideHelpers } from '@trpc/react-query/server';
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import superjson from 'superjson';
+import Layout from '~/components/Layout';
 import PostView from '~/components/PostView';
 import { appRouter } from '~/server/api/root';
 import { api } from '~/utils/api';
@@ -36,18 +37,14 @@ const SinglePostView = ({ postId }: { postId: string }) => {
   if (!post) return <div>Error...</div>;
 
   return (
-    <>
+    <Layout>
       <Head>
         <title>{`${post.content} - @${post.author.username}`}</title>
       </Head>
-      <main className="flex min-h-screen justify-center">
-        <div className="flex min-h-full w-full flex-col border-x border-slate-400 md:max-w-2xl">
-          <div className="flex flex-col">
-            <PostView key={post.id} post={post} />
-          </div>
-        </div>
-      </main>
-    </>
+      <div className="flex flex-col">
+        <PostView key={post.id} post={post} />
+      </div>
+    </Layout>
   );
 };
 
