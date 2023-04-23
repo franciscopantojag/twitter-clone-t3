@@ -19,5 +19,7 @@ model Post {
 
     authorId String
 
+    isActive Boolean @default(true)
+
     @@index([authorId])
 }

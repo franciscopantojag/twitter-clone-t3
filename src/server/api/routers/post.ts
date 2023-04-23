@@ -29,7 +29,7 @@ const MAX_POSTS = 100;
 export const postRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.prisma.post.findMany({
-      where: { authorId: { not: '' } },
+      where: { authorId: { not: '' }, isActive: true },
       orderBy: [{ createdAt: 'desc' }],
       take: MAX_POSTS,
     });
@@ -93,7 +93,7 @@ export const postRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const authorId = input.authorId;
       const posts = await ctx.prisma.post.findMany({
-        where: { authorId },
+        where: { authorId, isActive: true },
         orderBy: [{ createdAt: 'desc' }],
       });
       return posts;
@@ -111,6 +111,9 @@ export const postRouter = createTRPCRouter({
 
       const isAuthor = userId === post.authorId;
       if (!isAuthor) throw new TRPCError({ code: 'UNAUTHORIZED' });
-      return ctx.prisma.post.delete({ where: { id: postId } });
+      return ctx.prisma.post.update({
+        data: { isActive: false },
+        where: { id: postId },
+      });
     }),
 });

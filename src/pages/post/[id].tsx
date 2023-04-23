@@ -41,9 +41,13 @@ const SinglePostView = ({ postId }: { postId: string }) => {
       <Head>
         <title>{`${post.content} - @${post.author.username}`}</title>
       </Head>
-      <div className="flex flex-col">
-        <PostView key={post.id} post={post} />
-      </div>
+      {post.isActive ? (
+        <div className="flex flex-col">
+          <PostView key={post.id} post={post} />
+        </div>
+      ) : (
+        <div className="p-2 text-center">This post no longer exists</div>
+      )}
     </Layout>
   );
 };
