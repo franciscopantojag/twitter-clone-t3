@@ -1,12 +1,9 @@
 import type { GetStaticProps } from 'next';
-import { createServerSideHelpers } from '@trpc/react-query/server';
 import Head from 'next/head';
 import { api } from '~/utils/api';
-import { appRouter } from '~/server/api/root';
-import superjson from 'superjson';
-import { prisma } from '~/server/db';
 import Layout from '~/components/Layout';
 import ProfileFeed from '~/components/ProfileFeed';
+import { createSSG } from '~/utils/client';
 
 export const getStaticPaths = () => {
   return {
@@ -16,11 +13,7 @@ export const getStaticPaths = () => {
 };
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
-  const ssg = createServerSideHelpers({
-    router: appRouter,
-    ctx: { prisma, userId: null },
-    transformer: superjson,
-  });
+  const ssg = createSSG();
   const slug = ctx.params?.slug;
   if (typeof slug !== 'string') throw new Error('no slug');
   await ssg.profile.getUserByUsername.prefetch({ username: slug });
@@ -44,7 +37,7 @@ const ProfilePage = ({ username }: { username: string }) => {
     <>
       <Layout>
         <Head>
-          <title>{`@${data.username}`}</title>
+          <title>{textId}</title>
         </Head>
         <div className="relative h-36 bg-slate-600">
           <img

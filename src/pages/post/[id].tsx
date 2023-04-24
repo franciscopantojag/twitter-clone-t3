@@ -1,14 +1,11 @@
-import { createServerSideHelpers } from '@trpc/react-query/server';
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
-import superjson from 'superjson';
 import Layout from '~/components/Layout';
 import PostView from '~/components/PostView';
-import { appRouter } from '~/server/api/root';
 import { api } from '~/utils/api';
-import { prisma } from '../../server/db';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';
+import { createSSG } from '~/utils/client';
 
 export const getStaticPaths = () => {
   return {
@@ -20,11 +17,7 @@ export const getStaticPaths = () => {
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const postId = ctx.params?.id;
   if (typeof postId !== 'string') throw new Error('no slug');
-  const ssg = createServerSideHelpers({
-    router: appRouter,
-    ctx: { prisma, userId: null },
-    transformer: superjson,
-  });
+  const ssg = createSSG();
   await ssg.post.getById.prefetch({ postId });
 
   return {

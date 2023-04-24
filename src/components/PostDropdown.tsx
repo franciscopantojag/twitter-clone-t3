@@ -5,18 +5,16 @@ const PostDropdown = ({ onDelete }: { onDelete: () => void }) => (
   <Menu as="div" className="relative inline-block h-full text-left">
     <div className="h-full">
       <Menu.Button
-        className="inline-flex
-      w-full justify-center
-      rounded-full
-      border-[1px]
-      border-transparent
-      text-sm
-      font-medium
-      text-gray-600
-      hover:bg-gray-600
-      hover:text-white focus:outline-none
-      focus-visible:border-gray-600
+        className="inline-flex w-full justify-center rounded-full text-sm font-medium
+      text-gray-500
+      hover:bg-gray-500
+      hover:text-white
+      hover:ring-2
+      hover:ring-gray-500
+      focus:outline-none
       focus-visible:text-white
+      focus-visible:ring-2
+      focus-visible:ring-gray-500
       "
       >
         <svg
