@@ -59,11 +59,14 @@ export const buildPosts = (posts: Post[], users: User[]) => {
   const usersById = users.reduce((acc, user) => {
     const publicProfile = buildPublicProfile(user);
     if (!publicProfile) return acc;
-    return { ...acc, [publicProfile.id]: publicProfile };
+    acc[publicProfile.id] = publicProfile;
+    return acc;
   }, {} as UsersById);
 
   return posts.reduce((acc, post) => {
     const author = usersById[post.authorId];
-    return !author ? acc : [...acc, { ...post, author }];
+    if (!author) return acc;
+    acc.push({ ...post, author });
+    return acc;
   }, [] as PostWithAuthor[]);
 };
