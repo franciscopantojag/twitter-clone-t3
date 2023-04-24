@@ -83,7 +83,7 @@ const PostView: React.FC<Props> = ({
                   <span className="font-thin">{fromNow}</span>
                 </Link>
               </div>
-              <div className="h-6 w-8 pl-2">
+              <div className="h-[26px] w-[28px] pl-[2px]">
                 {showDrop && <PostDropdown onDelete={onDelete} />}
               </div>
             </div>
