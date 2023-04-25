@@ -19,11 +19,13 @@ const DAY = 24 * HOUR; // 1d
 const WEEK = 7 * DAY; // 1w
 const FOUR_WEEK = 4 * WEEK; // 24 abr
 
+const NOW_SECONDS = 3;
+
 export const buildRelative = (createdAt: Date) => {
   const msDiff = new Date().getTime() - createdAt.getTime();
   if (msDiff < MINUTE) {
     const seconds = Math.floor(msDiff / SECOND);
-    if (seconds === 0) return `Now`;
+    if (seconds <= NOW_SECONDS) return `Now`;
     return `${seconds}s`;
   }
   if (msDiff < HOUR) {
