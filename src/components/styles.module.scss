@@ -1,0 +1,6 @@
+.correctHover {
+  @media (hover: hover) {
+    @apply hover:text-white focus-visible:text-white focus-visible:ring-2
+    focus-visible:ring-gray-500;
+  }
+}
